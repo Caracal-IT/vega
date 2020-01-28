@@ -16,10 +16,98 @@
   <link rel="apple-touch-icon" href="/assets/icon/icon.png">
   <link rel="icon" type="image/x-icon" href="/assets/icon/favicon.ico">
   <link rel="manifest" href="/manifest.json">
+
+
+  <script type="module" src="/caracal_sirius/sirius/sirius.esm.js"></script>
+  <script nomodule="module" src="/caracal_sirius/sirius/sirius.js"></script>
+
+
+ <script type="module" src="/caracal_rigel/rigel/rigel.esm.js"></script>
+ <script nomodule="" src="/caracal_rigel/rigel/rigel.js"></script>
+
+  <style>
+    #loadingPanel {
+      position: fixed;
+      left: 0;
+      top: 0;
+      min-width: 100vw;
+      min-height: 100vh;
+      z-index: 99999999;
+      background: rgba(0, 0, 0, 0.611);
+    }
+
+    #loadingPanel::after {
+      content: "Loading...";
+      position: absolute;
+      display: block;
+      background-color: white;
+      width: 6rem;
+      height: 1.5rem;
+      line-height: 1.5rem;
+      text-align: center;
+      font-weight: bolder;
+      font-size: 1.2rem;
+      color: blueviolet;
+      border: 1px solid black;
+      border-radius: 5px;
+
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="loadingPanel" class="hidden"></div>
+  <sirius-wf style="position:relative;display: block;top:40px;text-align:center;margin:auto;width:450px;min-height: 100px;border:1px solid black;border-radius:5px;padding:5px;"></sirius-wf>
 
-  <app-root></app-root>
+  <script>
+    var process = {
+      name: "Workflow1",
+      activities: [
+        {
+          name: "start",
+          type: "page-activity",
+          components: [
+            { "tag": "rigel-header", "caption": "Login" },
+            { "tag": "rigel-field", "id": "login.username", "caption": "Username", "value" : "ettiene" },
+            { "tag": "rigel-field", "type":"password", "id": "password", "caption": "Password", "value" : ""},
+            { "tag": "rigel-button", "caption": "Login", "next": "end"}
+          ]
+        },
+        {
+          name: "end",
+          type: "page-activity",
+          components: [
+            { "tag": "rigel-header", "caption": "Login Success" },
+            { "tag": "rigel-label", "caption": "You have been successfully logged-in" }
+          ]
+        }
+      ]
+    };
 
+    var wf = document.querySelector("sirius-wf");
+
+    customElements.whenDefined('sirius-wf')
+                  .then(loadDefaultWf);
+
+    function loadDefaultWf() {
+      wf.addEventListener("wfMessage", error => {
+        const msg = error.detail;
+
+        switch (msg.messageType) {
+            case "ERROR": return console.log(msg);
+            case "START_LOADING": return console.log(msg);
+            case "END_LOADING": return console.log(msg);
+        }
+      });
+
+      wf.load(process);
+    }
+  </script>
 </body>
 </html>

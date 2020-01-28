@@ -10,7 +10,11 @@ export const config: Config = {
       type: 'www',
       // comment the following line to disable service workers in production
       serviceWorker: null,
-      baseUrl: 'https://myapp.local/'
+      baseUrl: 'https://myapp.local/',
+      copy: [
+        { src: '../node_modules/caracal_rigel/dist', dest: '../www/caracal_rigel' },
+        { src: '../node_modules/caracal_sirius/dist', dest: '../www/caracal_sirius' }
+      ]
     }
   ]
 };
