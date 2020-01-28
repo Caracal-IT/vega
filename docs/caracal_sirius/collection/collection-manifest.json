@@ -1,0 +1,13 @@
+{
+  "entries": [
+    "components\\sirius-page\\sirius-page.js",
+    "components\\sirius-wf\\sirius-wf.js"
+  ],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "1.8.6",
+    "typescriptVersion": "3.7.5"
+  },
+  "collections": [],
+  "bundles": []
+}
