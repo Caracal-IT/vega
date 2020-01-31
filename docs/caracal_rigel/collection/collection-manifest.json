@@ -1,0 +1,17 @@
+{
+  "entries": [
+    "components\\rigel-field\\rigel-field.js",
+    "components\\rigel-check\\rigel-check.js",
+    "components\\rigel-header\\rigel-header.js",
+    "components\\rigel-label\\rigel-label.js",
+    "components\\rigel-button\\rigel-button.js",
+    "components\\rigel-radio\\rigel-radio.js"
+  ],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "1.8.6",
+    "typescriptVersion": "3.7.5"
+  },
+  "collections": [],
+  "bundles": []
+}
