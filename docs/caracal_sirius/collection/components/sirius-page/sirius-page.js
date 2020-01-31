@@ -1,15 +1,32 @@
 import { h } from "@stencil/core";
 export class SiriusPage {
-    inputHandler(event) {
+    async inputHandler(event) {
         this.modelService.setModelValue(event.target["id"], event.target["value"]);
+        if (!this.page.isDirty)
+            return;
+        try {
+            await this.page.validate(this.page.context);
+        }
+        catch (Ex) { }
+    }
+    renderItem(item) {
+        return [
+            h(item.tag, Object.assign({ "wf-element": true, data: item, error: item["error"], errorMsg: item["errorMessage"], onInput: this.inputHandler.bind(this) }, item, { context: this.page["context"], value: this.modelService.getComponentModelValue(item), caption: this.modelService.getInterpolatedValue(item["caption"]) })),
+            item.validators ? h("span", null, item["errorMessage"]) : null
+        ];
     }
     render() {
-        const renderItem = (item) => h(item.tag, Object.assign({ "wf-element": true, onInput: this.inputHandler.bind(this) }, item, { context: this.page["context"], value: this.modelService.getComponentModelValue(item) }));
         if (this.page && this.page.components)
-            return this.page.components.map(renderItem);
+            return this.page.components.map(this.renderItem.bind(this));
     }
     static get is() { return "sirius-page"; }
     static get encapsulation() { return "shadow"; }
+    static get originalStyleUrls() { return {
+        "$": ["sirius-page.css"]
+    }; }
+    static get styleUrls() { return {
+        "$": ["sirius-page.css"]
+    }; }
     static get properties() { return {
         "page": {
             "type": "unknown",

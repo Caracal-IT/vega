@@ -8,7 +8,8 @@ export class Url {
     }
     get headers() {
         return {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'api-key': this.apiKey
         };
     }
 }

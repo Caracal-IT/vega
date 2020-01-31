@@ -1,14 +1,14 @@
 import { ActivityFactory } from "../activities/factory.activity";
 export class WFService {
-    setNextAction(name) {
+    setNextAction(name, source) {
         this.action = name;
         if (this.wfChangeHandler)
-            this.wfChangeHandler(this.action, this.process);
+            this.wfChangeHandler(this.action, this.process, source);
     }
     setProcess(process) {
         this.process = process;
         if (this.wfChangeHandler)
-            this.wfChangeHandler(this.action, this.process);
+            this.wfChangeHandler(this.action, this.process, null);
     }
     addActivity(type, create) {
         const act = ActivityFactory.activities.find(a => a.type === type);
@@ -22,7 +22,7 @@ export class WFService {
             return process;
         }
         catch (ex) {
-            console.log(ex);
+            console.error(ex);
             return null;
         }
     }

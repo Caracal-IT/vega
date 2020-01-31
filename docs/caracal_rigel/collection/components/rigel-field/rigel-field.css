@@ -5,8 +5,8 @@
 :host {
     position: relative;
     display: inline-block;
-    margin: 1rem 0 .3rem;
-    width: 350px;
+    margin: 1.3rem 0 .3rem;
+    width: 350px;    
 }
   
 input {
@@ -14,9 +14,15 @@ input {
     padding: .8rem .8rem .8rem .4rem;
     display: block;
     width: 100%;
-    border: none;
+    border: none;    
     border-bottom: 1px solid var(--primary-border-color, #757575);
 }
+
+:host([error=true]) input {   
+  background-color: var(--error-bg-color, pink);
+  border-bottom: 2px solid var(--error-color, hotpink);
+}
+
   
 input:focus {
     outline: none;

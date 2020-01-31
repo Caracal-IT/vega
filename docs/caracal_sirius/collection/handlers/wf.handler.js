@@ -1,71 +1,65 @@
 import { MessageType } from '../model/messages/message-type.model';
 import { Message } from '../model/messages/message.model';
 import { Context } from "../model/Context.model";
-import { HttpService } from "../services/http.service";
+import { ValidationError } from '../model/ValidationError.model';
 export class WFHandler {
-    constructor(wfService, modelService, container) {
+    constructor(http, wfService, modelService, container) {
+        this.http = http;
         this.wfService = wfService;
         this.modelService = modelService;
         this.container = container;
         this.hasError = false;
-        this.http = new HttpService(this.modelService);
         this.context = new Context({}, this.modelService, this.wfService, this.http, this.container);
     }
     handle() {
         this.wfService.wfChangeHandler = this.handleWfChange.bind(this);
         this.modelService.modelChangedHandler = this.handleModelChanged.bind(this);
     }
-    handleWfChange(action, process) {
+    handleWfChange(action, process, source) {
+        this.hasError = false;
         this.currProcess = process;
         this.currAction = action || "start";
-        this.executeActivity();
+        this.executeActivity(source);
     }
     handleModelChanged(model) {
         this.context.model = model;
     }
-    executeActivity() {
+    executeActivity(source) {
         if (!this.hasActivities())
             return;
         const act = this.currProcess.activities.find((p) => p.name === this.currAction);
-        const model = this.context.model;
         if (this.canExecute(act)) {
             this.hasError = false;
             this.sendMessage(new Message(MessageType.StartLoading, "Loading..."));
-            this.tryExecute(act)
-                .then(() => this.actionExecuted(act, model))
-                .catch((error) => {
-                this.modelService.setModelValue("message", new Message(MessageType.EndLoading));
-                this.handleError(error);
-            });
+            this.validate(source)
+                .then(() => act.execute(this.context))
+                .then(() => this.actionExecuted())
+                .catch((error) => this.handleError(error));
         }
     }
-    async tryExecute(act) {
-        try {
-            await act.execute(this.context);
-        }
-        catch (ex) {
-            this.handleError(ex);
-        }
+    async validate(source) {
+        if (this.shouldSkipValidate(source))
+            return true;
+        const act = this.currProcess.activities.find((p) => p.name === this.lastAction);
+        if (act && act.validate)
+            return act.validate(this.context);
     }
-    actionExecuted(act, model) {
-        if (this.hasError)
-            return;
+    shouldSkipValidate(source) {
+        return (source && source.data && source.data.noValidate)
+            || (this.currAction === this.lastAction);
+    }
+    actionExecuted() {
         this.sendMessage(new Message(MessageType.EndLoading));
-        this.goToNextAction(act, model);
-    }
-    goToNextAction(act, model) {
-        if (act.components)
+        if (!this.hasError)
             this.lastAction = this.currAction;
-        else if (model !== this.context.model)
-            this.wfService.setNextAction(this.lastAction);
-        else
-            this.wfService.setNextAction(null);
     }
     handleError(error) {
         this.hasError = true;
-        this.sendMessage(new Message(MessageType.Error, error.message, error.stack));
-        console.log("ERROR OCCURED", error);
-        console.dir(error);
+        this.modelService.setModelValue("message", new Message(MessageType.EndLoading, error.message));
+        if (error instanceof ValidationError)
+            this.sendMessage(new Message(MessageType.ValidationError, error.message, error.stack));
+        else
+            this.sendMessage(new Message(MessageType.Error, error.message, error.stack));
     }
     hasActivities() {
         return this.currProcess && this.currProcess.activities;

@@ -1,5 +1,5 @@
 import { Context } from '../model/Context.model';
-import { Activity } from "../model/activity";
+import { Activity } from "../model/activity.model";
 import { CodeActivity } from './code.activity';
 export declare class DecisionActivity extends CodeActivity {
     static type: string;

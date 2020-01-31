@@ -4,7 +4,8 @@ import { Url } from "../model/http/Url";
 export declare class HttpService {
     private modelService;
     constructor(modelService: ModelService);
-    fetch(url: Url, mappings: Array<Mapping>): Promise<any>;
+    fetchData(url: Url, body?: object): Promise<any>;
+    fetch(url: Url, mappings?: Array<Mapping>, body?: object, setModel?: boolean): Promise<any>;
     private getConfig;
     private getBody;
     private setModelValues;

@@ -1,5 +1,6 @@
 {
   "entries": [
+    "components\\sirius-analytics\\sirius-analytics.js",
     "components\\sirius-page\\sirius-page.js",
     "components\\sirius-wf\\sirius-wf.js"
   ],

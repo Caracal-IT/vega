@@ -2,7 +2,7 @@ import { h } from "@stencil/core";
 export class RigelButton {
     clickHandler() {
         if (this.hasContext)
-            this.context.wfService.setNextAction(this.next);
+            this.context.wfService.setNextAction(this.next, this);
     }
     render() {
         return h("button", { onClick: this.clickHandler.bind(this) }, this.caption);

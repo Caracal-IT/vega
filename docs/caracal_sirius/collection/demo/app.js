@@ -1,5 +1,6 @@
 const errorMsg = document.querySelector("#errorMsg");
 const errorStack = document.querySelector("#errorStack");
+const analyticsMsg = document.querySelector("#analyticsMsg");
 const clearErrorsButton = document.querySelector("#clearErrorsButton");
 const defaultWfButton = document.querySelector("#defaultWfButton");
 const workflow = document.querySelector("#workflow");
@@ -15,6 +16,7 @@ wf.addEventListener("wfMessage", error => {
 
     switch (msg.messageType) {
         case "ERROR": return showErrorMessage(msg);
+        case "VALIDATION_ERROR": return showErrorMessage(msg);
         case "START_LOADING": return showLoading(msg);
         case "END_LOADING": return hideLoading(msg);
     }    
@@ -25,6 +27,7 @@ wf2.addEventListener("wfMessage", error => {
 
     switch (msg.messageType) {
         case "ERROR": return showErrorMessage(msg);
+        case "VALIDATION_ERROR": return showErrorMessage(msg);
         case "START_LOADING": return showLoading(msg);
         case "END_LOADING": return hideLoading(msg);
     }    
@@ -33,7 +36,7 @@ wf2.addEventListener("wfMessage", error => {
 function showErrorMessage(msg) {    
     errorMsg.innerText = msg.description;
     errorStack.innerText = msg.stack;
-    hideLoading();
+    hideLoading();    
 }
 
 function showLoading() {
@@ -82,3 +85,15 @@ defaultWfButton.addEventListener("click", async () => {
             });         
     });
 });
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+    if (!event.data.path)
+        return;
+    
+    if(analyticsMsg.innerText.length > 999999)
+        analyticsMsg.innerText = "";
+    
+    analyticsMsg.innerText += `\n\r${JSON.stringify(event.data)}`     
+}

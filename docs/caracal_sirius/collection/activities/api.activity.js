@@ -7,7 +7,7 @@ export class ApiActivity {
             return context
                 .http
                 .fetch(url, this.mappings)
-                .then(() => context.wfService.setNextAction(this.next));
+                .then(() => context.wfService.setNextAction(this.next, this));
         };
     }
     static create(act) {

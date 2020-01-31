@@ -4,19 +4,24 @@ export class HttpService {
     constructor(modelService) {
         this.modelService = modelService;
     }
-    async fetch(url, mappings) {
-        const response = await fetch(url.url, this.getConfig(url, mappings));
+    async fetchData(url, body = null) {
+        return this.fetch(url, null, body, false);
+    }
+    async fetch(url, mappings = null, body = null, setModel = true) {
+        const response = await fetch(url.url, this.getConfig(url, mappings, body));
         const data = await response.json();
+        if (!this.modelService || !setModel)
+            return data;
         return this.setModelValues(data, mappings);
     }
-    getConfig(url, mappings) {
+    getConfig(url, mappings, body = null) {
         return {
             method: url.method,
             mode: 'cors',
             headers: url.headers,
             redirect: 'follow',
             referrer: 'no-referrer',
-            body: this.getBody(url, mappings)
+            body: body ? JSON.stringify(body) : this.getBody(url, mappings)
         };
     }
     getBody(url, mappings) {

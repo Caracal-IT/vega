@@ -10,7 +10,7 @@ const RigelButton = class {
     }
     clickHandler() {
         if (this.hasContext)
-            this.context.wfService.setNextAction(this.next);
+            this.context.wfService.setNextAction(this.next, this);
     }
     render() {
         return core.h("button", { onClick: this.clickHandler.bind(this) }, this.caption);
@@ -38,7 +38,7 @@ const RigelField = class {
     render() {
         return core.h(core.Host, null, core.h("input", { type: this.type, value: this.value, onInput: (e) => this.value = e.target.value, required: true }), core.h("span", { class: "bar" }), core.h("label", null, this.caption));
     }
-    static get style() { return "*{-webkit-box-sizing:border-box;box-sizing:border-box}:host{position:relative;display:inline-block;margin:1rem 0 .3rem;width:350px}input{font-size:1rem;padding:.8rem .8rem .8rem .4rem;display:block;width:100%;border:none;border-bottom:1px solid var(--primary-border-color,#757575)}input:focus{outline:none}label{color:var(--placeholder-color,#999);font-size:1.2rem;font-weight:400;position:absolute;pointer-events:none;left:.4rem;top:.8rem;transition:all .2s ease;-moz-transition:.2s ease all;-webkit-transition:all .2s ease}input:focus~label,input:valid~label{top:-.7rem;font-size:.8rem;color:var(--primary-bg-color,purple)}.bar{position:relative;display:block;width:100%}.bar:after,.bar:before{content:\"\";height:2px;width:0;bottom:1px;position:absolute;background:var(--primary-bg-color,purple);transition:all .2s ease;-moz-transition:.2s ease all;-webkit-transition:all .2s ease}.bar:before{left:50%}.bar:after{right:50%}input:focus~.bar:after,input:focus~.bar:before{width:50%}\@-webkit-keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}\@-moz-keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}\@keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}"; }
+    static get style() { return "*{-webkit-box-sizing:border-box;box-sizing:border-box}:host{position:relative;display:inline-block;margin:1.3rem 0 .3rem;width:350px}input{font-size:1rem;padding:.8rem .8rem .8rem .4rem;display:block;width:100%;border:none;border-bottom:1px solid var(--primary-border-color,#757575)}:host([error=true]) input{background-color:var(--error-bg-color,pink);border-bottom:2px solid var(--error-color,#ff69b4)}input:focus{outline:none}label{color:var(--placeholder-color,#999);font-size:1.2rem;font-weight:400;position:absolute;pointer-events:none;left:.4rem;top:.8rem;transition:all .2s ease;-moz-transition:.2s ease all;-webkit-transition:all .2s ease}input:focus~label,input:valid~label{top:-.7rem;font-size:.8rem;color:var(--primary-bg-color,purple)}.bar{position:relative;display:block;width:100%}.bar:after,.bar:before{content:\"\";height:2px;width:0;bottom:1px;position:absolute;background:var(--primary-bg-color,purple);transition:all .2s ease;-moz-transition:.2s ease all;-webkit-transition:all .2s ease}.bar:before{left:50%}.bar:after{right:50%}input:focus~.bar:after,input:focus~.bar:before{width:50%}\@-webkit-keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}\@-moz-keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}\@keyframes inputHighlighter{0%{background:var(--primary-bg-color,purple)}to{width:0;background:transparent}}"; }
 };
 
 const RigelHeader = class {

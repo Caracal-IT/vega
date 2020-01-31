@@ -1,4 +1,4 @@
-<!doctype html><html dir="ltr" lang="en"><head> <meta charset="utf-8"> <title>Stencil Starter App</title> <meta name="Description" content="Welcome to the Stencil App Starter. You can use this starter to build entire apps all with web components using Stencil!"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <meta name="theme-color" content="#16161d"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta http-equiv="x-ua-compatible" content="IE=Edge"> <link rel="modulepreload" href="./build/p-cr4ccxoo.js"><script type="module" src="./build/p-cr4ccxoo.js" data-resources-url="./build/" data-stencil-namespace="app"></script> <script nomodule="" src="./build/app.js"></script> <style>body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol}</style> <link rel="apple-touch-icon" href="./assets/icon/icon.png"> <link rel="icon" type="image/x-icon" href="./assets/icon/favicon.ico"> <link rel="manifest" href="./manifest.json"> <script type="module" src="./caracal_sirius/sirius/sirius.esm.js"></script> <script nomodule="module" src="./caracal_sirius/sirius/sirius.js"></script> <script type="module" src="./caracal_rigel/rigel/rigel.esm.js"></script> <script nomodule="" src="./caracal_rigel/rigel/rigel.js"></script> <style>#loadingPanel {
+<!doctype html><html dir="ltr" lang="en"><head> <meta charset="utf-8"> <title>Stencil Starter App</title> <meta name="Description" content="Welcome to the Stencil App Starter. You can use this starter to build entire apps all with web components using Stencil!"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <meta name="theme-color" content="#16161d"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta http-equiv="x-ua-compatible" content="IE=Edge"> <script type="module" src="./build/app.esm.js"></script> <script nomodule="" src="./build/app.js"></script> <link href="./build/p-qsbgvzk9.css" rel="stylesheet"> <link rel="apple-touch-icon" href="./assets/icon/icon.png"> <link rel="icon" type="image/x-icon" href="./assets/icon/favicon.ico"> <link rel="manifest" href="./manifest.json"> <script type="module" src="./caracal_sirius/sirius/sirius.esm.js"></script> <script nomodule="module" src="./caracal_sirius/sirius/sirius.js"></script> <script type="module" src="./caracal_rigel/rigel/rigel.esm.js"></script> <script nomodule="" src="./caracal_rigel/rigel/rigel.js"></script> <style>#loadingPanel {
       position: fixed;
       left: 0;
       top: 0;
@@ -37,38 +37,14 @@
       display: block;
       top:40px;
       text-align:center;
+      line-height:36px;
       margin:auto;
       width:450px;
       min-height: 100px;
       border:1px solid black;
       border-radius:10px;
       padding:5px;
-    }</style> </head> <body> <div id="loadingPanel" class="hidden"></div> <sirius-wf></sirius-wf> <script>var process = {
-      name: "Workflow1",
-      activities: [
-        {
-          name: "start",
-          type: "page-activity",
-          components: [
-            { "tag": "rigel-header", "caption": "Login" },
-            { "tag": "rigel-field", "id": "login.username", "caption": "Username", "value" : "ettiene" },
-            { "tag": "rigel-field", "type":"password", "id": "password", "caption": "Password", "value" : ""},
-            { "tag": "rigel-button", "caption": "Login", "next": "end"}
-          ]
-        },
-        {
-          name: "end",
-          type: "page-activity",
-          components: [
-            { "tag": "rigel-header", "caption": "Login Success" },
-            { "tag": "rigel-label", "caption": "You have been successfully logged-in, Please continue" },
-            { "tag": "rigel-button", "caption": "Back", "next": "start"}
-          ]
-        }
-      ]
-    };
-
-    var wf = document.querySelector("sirius-wf");
+    }</style> </head> <body> <div id="loadingPanel" class="hidden"></div> <sirius-wf api-key="da3156ae-fb51-4d09-80da-8f06b2d23504" process="login.wf.json" base-url="./wf/"></sirius-wf> <script>const wf = document.querySelector("sirius-wf");
 
     customElements.whenDefined('sirius-wf')
                   .then(loadDefaultWf);
@@ -84,5 +60,4 @@
         }
       });
 
-      wf.load(process);
     }</script> </body></html>

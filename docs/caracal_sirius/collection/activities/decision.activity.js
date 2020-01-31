@@ -7,9 +7,9 @@ export class DecisionActivity extends CodeActivity {
             const expression = `return ${this.left} ${this.equality} ${this.right};`;
             const result = super.eval(expression, context);
             if (result)
-                context.wfService.setNextAction(this.trueAction);
+                context.wfService.setNextAction(this.trueAction, this);
             else
-                context.wfService.setNextAction(this.falseAction);
+                context.wfService.setNextAction(this.falseAction, this);
         };
     }
     static create(act) {

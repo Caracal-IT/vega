@@ -6,7 +6,7 @@ export class AssignActivity {
             if (this.value.startsWith("{") && this.value.endsWith("}"))
                 value = context.modelService.getValue(this.value.substring(1, this.value.length - 1), context.model);
             context.modelService.setModelValue(this.key, value);
-            context.wfService.setNextAction(this.next);
+            context.wfService.setNextAction(this.next, this);
         };
     }
     static create(act) {

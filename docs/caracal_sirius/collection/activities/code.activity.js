@@ -3,7 +3,8 @@ export class CodeActivity {
         this.type = CodeActivity.type;
         this.execute = (context) => {
             this.eval(this.expression, context);
-            context.wfService.setNextAction(this.next);
+            if (this.next && this.next.length > 0)
+                context.wfService.setNextAction(this.next, this);
         };
     }
     static create(act) {

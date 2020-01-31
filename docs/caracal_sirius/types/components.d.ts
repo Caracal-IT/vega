@@ -18,21 +18,34 @@ import {
 } from './model/Process.model';
 
 export namespace Components {
+  interface SiriusAnalytics {}
   interface SiriusPage {
     'modelService': ModelService;
     'page': Page;
   }
   interface SiriusWf {
     'addActivity': (type: string, create: any) => Promise<void>;
+    'apiKey': string;
+    'baseUrl': string;
+    'dehydrate': (sessionId: string) => Promise<void>;
     'goto': (activity: string) => Promise<void>;
-    'load': (processDef: string | object) => Promise<void>;
-    'loadProcess': (process: Process) => Promise<void>;
+    'hydrate': (process: string, sessionId: string, activity?: string) => Promise<void>;
+    'load': (processDef: string | object, activity?: string) => Promise<void>;
+    'loadProcess': (process: Process, activity?: string) => Promise<void>;
+    'loadUrl': (process: string, activity?: string) => Promise<void>;
     'parse': (processDef: string) => Promise<Process>;
+    'process': string;
   }
 }
 
 declare global {
 
+
+  interface HTMLSiriusAnalyticsElement extends Components.SiriusAnalytics, HTMLStencilElement {}
+  var HTMLSiriusAnalyticsElement: {
+    prototype: HTMLSiriusAnalyticsElement;
+    new (): HTMLSiriusAnalyticsElement;
+  };
 
   interface HTMLSiriusPageElement extends Components.SiriusPage, HTMLStencilElement {}
   var HTMLSiriusPageElement: {
@@ -46,21 +59,27 @@ declare global {
     new (): HTMLSiriusWfElement;
   };
   interface HTMLElementTagNameMap {
+    'sirius-analytics': HTMLSiriusAnalyticsElement;
     'sirius-page': HTMLSiriusPageElement;
     'sirius-wf': HTMLSiriusWfElement;
   }
 }
 
 declare namespace LocalJSX {
+  interface SiriusAnalytics {}
   interface SiriusPage {
     'modelService'?: ModelService;
     'page'?: Page;
   }
   interface SiriusWf {
+    'apiKey'?: string;
+    'baseUrl'?: string;
     'onWfMessage'?: (event: CustomEvent<any>) => void;
+    'process'?: string;
   }
 
   interface IntrinsicElements {
+    'sirius-analytics': SiriusAnalytics;
     'sirius-page': SiriusPage;
     'sirius-wf': SiriusWf;
   }
@@ -72,6 +91,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
   export namespace JSX {
     interface IntrinsicElements {
+      'sirius-analytics': LocalJSX.SiriusAnalytics & JSXBase.HTMLAttributes<HTMLSiriusAnalyticsElement>;
       'sirius-page': LocalJSX.SiriusPage & JSXBase.HTMLAttributes<HTMLSiriusPageElement>;
       'sirius-wf': LocalJSX.SiriusWf & JSXBase.HTMLAttributes<HTMLSiriusWfElement>;
     }
