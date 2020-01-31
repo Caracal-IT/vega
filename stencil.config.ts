@@ -16,8 +16,8 @@ export const config: Config = {
         { src: '../node_modules/caracal_rigel/dist', dest: '../www/caracal_rigel' },
         { src: '../node_modules/caracal_sirius/dist', dest: '../www/caracal_sirius' }
       ]
-    }/*
-    ,
+    }
+    ,/*
     {
       type: 'www',
       dir: 'docs',
