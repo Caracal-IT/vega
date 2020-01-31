@@ -1,0 +1,32 @@
+{
+  "name": "Login",
+  "activities": [
+    {
+      "name": "start",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Login" },
+
+        { "tag": "rigel-field",
+          "id": "login.username",
+          "caption": "Username",
+          "validators": [
+            { "name": "Required", "message": "The field is required" }
+          ]
+        },
+
+        { "tag": "rigel-field", "type":"password", "id": "password", "caption": "Password", "value" : ""},
+        { "tag": "rigel-button", "caption": "Login", "next": "end"}
+      ]
+    },
+    {
+      "name": "end",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Login Success" },
+        { "tag": "rigel-label", "caption": "You have been successfully logged-in, Please continue" },
+        { "tag": "rigel-button", "caption": "Back", "next": "start"}
+      ]
+    }
+  ]
+}

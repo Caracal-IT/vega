@@ -12,6 +12,7 @@ export const config: Config = {
       serviceWorker: null,
       baseUrl: 'https://myapp.local/',
       copy: [
+        { src: 'workflow', dest: 'wf' },
         { src: '../node_modules/caracal_rigel/dist', dest: '../www/caracal_rigel' },
         { src: '../node_modules/caracal_sirius/dist', dest: '../www/caracal_sirius' }
       ]
