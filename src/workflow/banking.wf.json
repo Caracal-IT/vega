@@ -17,7 +17,7 @@
     {
       "name": "redirectTo",
       "type": "redirect-activity",
-      "url": "https://caracal-it.github.io/sirius/redirect.html?returnUrl=https://caracal-it.github.io/vega&process=banking.wf.json&activity=end"
+      "url": "https://caracal-it.github.io/sirius/redirect.html?redirectUrl=https://caracal-it.github.io/vega&process=banking.wf.json&activity=end"
     },
     {
       "name": "end",
