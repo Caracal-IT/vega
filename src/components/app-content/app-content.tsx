@@ -31,7 +31,7 @@ export class AppContent {
         <sirius-wf
             api-key="da3156ae-fb51-4d09-80da-8f06b2d23504"
             process={this.match.params.process + ".wf.json"}
-            base-url="../wf/">
+            base-url="../vega/wf">
         </sirius-wf>
       );
     }
