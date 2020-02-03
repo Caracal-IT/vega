@@ -23,8 +23,8 @@ export class AppRoot {
         <main>
           <stencil-router>
             <stencil-route-switch scrollTopOffset={0}>
-              <stencil-route url='/' component='app-home' exact={true} />
-              <stencil-route url='/content/:process' component='app-content' />
+              <stencil-route url='/vega' component='app-home' exact={true} />
+              <stencil-route url='vega/content/:process' component='app-content' />
             </stencil-route-switch>
           </stencil-router>
         </main>
