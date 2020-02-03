@@ -3,9 +3,16 @@
   "activities": [
     {
       "name": "start",
+      "type": "assign-activity",
+      "key": "register",
+      "value": "",
+      "next": "landing"
+    },
+    {
+      "name": "landing",
       "type": "page-activity",
       "components": [
-        { "tag": "rigel-header", "caption": "Register" },
+        { "tag": "rigel-header", "caption": "Register - Login Info" },
 
         { "tag": "rigel-field",
           "id": "register.username",
@@ -15,7 +22,21 @@
           ]
         },
 
-        { "tag": "rigel-field", "type":"password", "id": "password", "caption": "Password", "value" : ""},
+        { "tag": "rigel-field", "type":"password", "id": "register.password", "caption": "Password", "value" : ""},
+        { "tag": "rigel-button", "caption": "Continue", "next": "details"}
+      ]
+    },
+    {
+      "name": "details",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Register - Details" },
+
+        { "tag": "rigel-field", "id": "register.firstname", "caption": "Firstname" },
+        { "tag": "rigel-field", "id": "register.lastname", "caption": "Surname" },
+        { "tag": "rigel-field", "id": "register.phone", "caption": "Phone" },
+
+
         { "tag": "rigel-button", "caption": "Register", "next": "end"}
       ]
     },
