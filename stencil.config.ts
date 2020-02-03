@@ -17,7 +17,7 @@ export const config: Config = {
         { src: '../node_modules/caracal_sirius/dist', dest: '../www/caracal_sirius' }
       ]
     }
-    ,
+    ,/*
     {
       type: 'www',
       dir: 'docs',
@@ -26,6 +26,6 @@ export const config: Config = {
         { src: '../www', dest: '' }
       ]
     }
-
+*/
   ]
 };
