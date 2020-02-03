@@ -3,6 +3,13 @@
   "activities": [
     {
       "name": "start",
+      "type": "assign-activity",
+      "key": "banking.amount",
+      "value": "",
+      "next": "details"
+    },
+    {
+      "name": "details",
       "type": "page-activity",
       "components": [
         { "tag": "rigel-header", "caption": "Banking" },
@@ -17,7 +24,7 @@
     {
       "name": "redirectTo",
       "type": "redirect-activity",
-      "url": "https://caracal-it.github.io/sirius/redirect.html?redirectUrl=http://localhost:3333&process=banking.wf.json&activity=end"
+      "url": "https://caracal-it.github.io/sirius/redirect.html?redirectUrl=http://localhost:3333/content/banking&process=banking.wf.json&activity=end"
     },
     {
       "name": "end",
