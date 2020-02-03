@@ -1,13 +1,12 @@
 import { EventEmitter } from "../../stencil.core";
 import { Page } from "../../model/Page.model";
-import { Process } from "../../model/Process.model";
-import { WFService } from "../../services/wf.service";
-import { WFHandler } from "../../handlers/wf.handler";
 import { Context } from "../../model/Context.model";
-import { ModelService } from "../../services/model.service";
-import { WFLoaderHandler } from "../../handlers/wfLoader.handler";
+import { WFService } from "../../services/wf.service";
 import { HttpService } from "../../services/http.service";
+import { ModelService } from "../../services/model.service";
 import { PersistanceService } from "../../services/persistance.service";
+import { WFHandler } from "../../handlers/wf.handler";
+import { WFLoaderHandler } from "../../handlers/wfLoader.handler";
 export declare class SiriusWf {
     private ipcHistory;
     http: HttpService;
@@ -19,19 +18,20 @@ export declare class SiriusWf {
     wfLoaderHandler: WFLoaderHandler;
     wfMessage: EventEmitter;
     page: Page;
+    wfSessionId: string;
     baseUrl: string;
     apiKey: string;
     process: string;
+    validateName(newValue: string, oldValue: string): void;
     addActivity(type: string, create: any): Promise<void>;
     goto(activity: string): Promise<void>;
-    loadProcess(process: Process, activity?: string): Promise<void>;
-    parse(processDef: string): Promise<Process>;
-    load(processDef: string | object, activity?: string): Promise<void>;
-    loadUrl(process: string, activity?: string): Promise<void>;
+    loadProcess(processDef: string | object, activity?: string): Promise<void>;
+    loadUrl(process: string, activity?: string): Promise<import("../../model/Process.model").Process>;
     hydrate(process: string, sessionId: string, activity?: string): Promise<void>;
     dehydrate(sessionId: string): Promise<void>;
     ipc(process: string, next?: string): Promise<void>;
     completed(process: string): Promise<void>;
     componentWillLoad(): Promise<void>;
+    private UUID;
     render(): any;
 }

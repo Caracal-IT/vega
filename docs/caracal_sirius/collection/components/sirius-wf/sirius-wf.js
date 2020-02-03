@@ -1,13 +1,19 @@
 import { h } from "@stencil/core";
+import { IPC } from "../../model/ipc.model";
 import { WFService } from "../../services/wf.service";
-import { WFHandler } from "../../handlers/wf.handler";
-import { ModelService } from "../../services/model.service";
-import { WFLoaderHandler } from "../../handlers/wfLoader.handler";
 import { HttpService } from "../../services/http.service";
+import { ModelService } from "../../services/model.service";
 import { PersistanceService } from "../../services/persistance.service";
+import { WFHandler } from "../../handlers/wf.handler";
+import { WFLoaderHandler } from "../../handlers/wfLoader.handler";
 export class SiriusWf {
     constructor() {
         this.ipcHistory = [];
+    }
+    validateName(newValue, oldValue) {
+        if (newValue === oldValue || newValue === "")
+            return;
+        this.loadUrl(newValue);
     }
     async addActivity(type, create) {
         this.wfService.addActivity(type, create);
@@ -15,30 +21,26 @@ export class SiriusWf {
     async goto(activity) {
         this.wfService.setNextAction(activity, this);
     }
-    async loadProcess(process, activity = "start") {
-        this.page = null;
-        this.wfService.setProcess(process);
-        this.goto(activity);
-    }
-    async parse(processDef) {
-        return this.wfService.parse(processDef);
-    }
-    async load(processDef, activity = "start") {
+    async loadProcess(processDef, activity = "start") {
         if (typeof processDef === 'object')
             processDef = JSON.stringify(processDef);
         const process = this.wfService.parse(processDef);
         if (!process)
             return;
-        return this.loadProcess(process, activity);
+        this.page = null;
+        this.wfService.setProcess(process);
+        this.goto(activity);
     }
     async loadUrl(process, activity = "start") {
         try {
-            await this.load(await this.wfLoaderHandler.load(process), activity);
+            await this.loadProcess(await this.wfLoaderHandler.load(process), activity);
             this.process = process;
+            return this.wfService.getProcess();
         }
         catch (Exception) { }
     }
     async hydrate(process, sessionId, activity = "start") {
+        this.wfSessionId = sessionId;
         const ipc = this.persistance.getItem(`${sessionId}_IPC`) || [];
         const model = this.persistance.getItem(`${sessionId}_MODEL`) || this.modelService.getModel();
         this.loadUrl(process, activity);
@@ -73,6 +75,7 @@ export class SiriusWf {
     }
     async componentWillLoad() {
         this.persistance = new PersistanceService();
+        this.wfSessionId = this.wfSessionId || this.UUID();
         this.wfService = new WFService();
         this.modelService = new ModelService();
         this.http = new HttpService(this.modelService);
@@ -84,12 +87,35 @@ export class SiriusWf {
         if (this.process)
             this.loadUrl(this.process);
     }
+    UUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
     render() {
         return h("sirius-page", { page: this.page, modelService: this.modelService });
     }
     static get is() { return "sirius-wf"; }
     static get encapsulation() { return "shadow"; }
     static get properties() { return {
+        "wfSessionId": {
+            "type": "string",
+            "mutable": true,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "wf-session-id",
+            "reflect": true
+        },
         "baseUrl": {
             "type": "string",
             "mutable": false,
@@ -205,55 +231,6 @@ export class SiriusWf {
         },
         "loadProcess": {
             "complexType": {
-                "signature": "(process: Process, activity?: string) => Promise<void>",
-                "parameters": [{
-                        "tags": [],
-                        "text": ""
-                    }, {
-                        "tags": [],
-                        "text": ""
-                    }],
-                "references": {
-                    "Promise": {
-                        "location": "global"
-                    },
-                    "Process": {
-                        "location": "import",
-                        "path": "../../model/Process.model"
-                    }
-                },
-                "return": "Promise<void>"
-            },
-            "docs": {
-                "text": "",
-                "tags": []
-            }
-        },
-        "parse": {
-            "complexType": {
-                "signature": "(processDef: string) => Promise<Process>",
-                "parameters": [{
-                        "tags": [],
-                        "text": ""
-                    }],
-                "references": {
-                    "Promise": {
-                        "location": "global"
-                    },
-                    "Process": {
-                        "location": "import",
-                        "path": "../../model/Process.model"
-                    }
-                },
-                "return": "Promise<Process>"
-            },
-            "docs": {
-                "text": "",
-                "tags": []
-            }
-        },
-        "load": {
-            "complexType": {
                 "signature": "(processDef: string | object, activity?: string) => Promise<void>",
                 "parameters": [{
                         "tags": [],
@@ -276,7 +253,7 @@ export class SiriusWf {
         },
         "loadUrl": {
             "complexType": {
-                "signature": "(process: string, activity?: string) => Promise<void>",
+                "signature": "(process: string, activity?: string) => Promise<import(\"D:/Development/Labs/Ettiene/sirius/src/model/Process.model\").Process>",
                 "parameters": [{
                         "tags": [],
                         "text": ""
@@ -287,9 +264,12 @@ export class SiriusWf {
                 "references": {
                     "Promise": {
                         "location": "global"
+                    },
+                    "Process": {
+                        "location": "global"
                     }
                 },
-                "return": "Promise<void>"
+                "return": "Promise<Process>"
             },
             "docs": {
                 "text": "",
@@ -341,11 +321,8 @@ export class SiriusWf {
             }
         }
     }; }
-}
-class IPC {
-    constructor(parent, process, next) {
-        this.parent = parent;
-        this.process = process;
-        this.next = next;
-    }
+    static get watchers() { return [{
+            "propName": "process",
+            "methodName": "validateName"
+        }]; }
 }

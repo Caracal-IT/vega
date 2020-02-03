@@ -13,6 +13,8 @@ export declare class WFHandler {
     currProcess: Process;
     currAction: string;
     lastAction: string;
+    wfProcess: string;
+    wfAction: string;
     hasError: boolean;
     constructor(http: HttpService, wfService: WFService, modelService: ModelService, container: SiriusWf);
     handle(): void;
@@ -26,4 +28,6 @@ export declare class WFHandler {
     private hasActivities;
     private canExecute;
     private sendMessage;
+    private setWorkflowStatus;
+    private getWorkflowStatus;
 }

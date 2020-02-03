@@ -25,7 +25,7 @@ export class ModelService {
     getInterpolatedValue(value) {
         if (!value)
             return value;
-        const myRegexp = /\{\{(?:\w+)\}\}/g;
+        const myRegexp = /\{\{(?:(\w|\.)+)\}\}/g;
         const match = value.match(myRegexp);
         if (!match || match.length === 0)
             return value;

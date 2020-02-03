@@ -4,8 +4,6 @@ export class PageActivity {
     constructor() {
         this.type = PageActivity.type;
         this.execute = (context) => {
-            // Clear the cache
-            context.container.page = null;
             this.context = context;
             this.isDirty = false;
             this.components
@@ -14,9 +12,7 @@ export class PageActivity {
                 component["error"] = "false";
                 component["errorMessage"] = "";
             });
-            setTimeout(() => {
-                context.container.page = this;
-            }, 0);
+            setTimeout(this.reload.bind(this), 10);
         };
         this.validate = (context) => {
             return new Promise((resolve, reject) => {
@@ -34,6 +30,10 @@ export class PageActivity {
     }
     static create(act) {
         return Object.assign(new PageActivity(), act);
+    }
+    reload() {
+        this.context.container.page = null;
+        setTimeout(() => this.context.container.page = this, 15);
     }
 }
 PageActivity.type = "page-activity";

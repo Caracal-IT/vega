@@ -5,6 +5,7 @@ export declare class WFService {
     process: Process;
     setNextAction(name: string, source: any): void;
     setProcess(process: Process): void;
+    getProcess(): Process;
     addActivity(type: string, create: any): void;
     parse(processDef: string): Process;
 }

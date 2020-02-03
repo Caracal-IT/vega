@@ -6,5 +6,4 @@ export declare class RedirectActivity implements Activity {
     type: string;
     url: string;
     execute: (context: Context) => void;
-    UUID(): string;
 }

@@ -1,4 +1,4 @@
-import { RequiredValidator } from './RequiredValidator';
+import { RequiredValidator } from './required.validator';
 export class Validators {
     constructor(context, component) {
         this.context = context;

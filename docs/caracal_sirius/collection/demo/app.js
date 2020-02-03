@@ -11,32 +11,25 @@ const processDef = document.querySelector("#processDef");
 const loadProcessButton = document.querySelector("#loadProcessButton");
 const loadingPanel = document.querySelector("#loadingPanel");
 
-wf.addEventListener("wfMessage", error => {
+wf.addEventListener("wfMessage", wfHandler);
+wf2.addEventListener("wfMessage", wfHandler);
+
+function wfHandler(error) {
     const msg = error.detail;
 
     switch (msg.messageType) {
-        case "ERROR": return showErrorMessage(msg);
-        case "VALIDATION_ERROR": return showErrorMessage(msg);
+        case "ERROR": return showMessage(msg);
+        case "VALIDATION_ERROR": return showMessage(msg);
         case "START_LOADING": return showLoading(msg);
         case "END_LOADING": return hideLoading(msg);
-    }    
-});
+        case "WORKFLOW_CHANGING": return showMessage(msg);
+        case "WORKFLOW_CHANGED": return showMessage(msg);
+    }  
+}
 
-wf2.addEventListener("wfMessage", error => {
-    const msg = error.detail;
-
-    switch (msg.messageType) {
-        case "ERROR": return showErrorMessage(msg);
-        case "VALIDATION_ERROR": return showErrorMessage(msg);
-        case "START_LOADING": return showLoading(msg);
-        case "END_LOADING": return hideLoading(msg);
-    }    
-});
-
-function showErrorMessage(msg) {    
-    errorMsg.innerText = msg.description;
-    errorStack.innerText = msg.stack;
-    hideLoading();    
+function showMessage(msg) {     
+    errorMsg.innerHTML = `${errorMsg.value}${msg.messageType} - ${msg.description}&#10;`;
+    errorStack.innerText = msg.stack; 
 }
 
 function showLoading() {
@@ -53,12 +46,8 @@ clearErrorsButton.addEventListener('click', () => {
 });
 
 loadProcessButton.addEventListener("click", async () => {      
-    const process = await wf2.parse(processDef.value);
-
-    if(!process)
-    return;
-    
-    wf2.loadProcess({...process});        
+    if(processDef.value)
+        wf2.loadProcess(processDef.value);        
 })    
 
 defaultWfButton.addEventListener("click", async () => {
@@ -68,32 +57,15 @@ defaultWfButton.addEventListener("click", async () => {
         return;
     }
 
-    showLoading();
-
-    fetch("wf/" + workflow.value)
-        .then(response => response.text())
-        .then(data => {          
-            processDef.value = data;
-        
-            wf.parse(data)
-              .then(process => {
-                if(!process)
-                    return;
-    
-                wf.loadProcess(process); 
-                hideLoading()
-            });         
-    });
+    wf.loadUrl(workflow.value)
+      .then(process => processDef.value = JSON.stringify(process));
 });
 
 window.addEventListener("message", receiveMessage, false);
 
 function receiveMessage(event) {
-    if (!event.data.path)
+    if (!event.data || !event.data.path)
         return;
-    
-    if(analyticsMsg.innerText.length > 999999)
-        analyticsMsg.innerText = "";
-    
+     
     analyticsMsg.innerText += `\n\r${JSON.stringify(event.data)}`     
 }

@@ -19,7 +19,11 @@ export class WFHandler {
         this.hasError = false;
         this.currProcess = process;
         this.currAction = action || "start";
-        this.executeActivity(source);
+        setTimeout(() => {
+            this.setWorkflowStatus();
+            this.sendMessage(new Message(MessageType.Workflow_Changing, this.getWorkflowStatus()));
+            this.executeActivity(source);
+        }, 10);
     }
     handleModelChanged(model) {
         this.context.model = model;
@@ -50,16 +54,19 @@ export class WFHandler {
     }
     actionExecuted() {
         this.sendMessage(new Message(MessageType.EndLoading));
+        this.sendMessage(new Message(MessageType.Workflow_Changed, this.getWorkflowStatus()));
         if (!this.hasError)
             this.lastAction = this.currAction;
     }
     handleError(error) {
         this.hasError = true;
+        this.sendMessage(new Message(MessageType.EndLoading));
         this.modelService.setModelValue("message", new Message(MessageType.EndLoading, error.message));
         if (error instanceof ValidationError)
             this.sendMessage(new Message(MessageType.ValidationError, error.message, error.stack));
         else
             this.sendMessage(new Message(MessageType.Error, error.message, error.stack));
+        this.sendMessage(new Message(MessageType.Workflow_Changed, this.getWorkflowStatus()));
     }
     hasActivities() {
         return this.currProcess && this.currProcess.activities;
@@ -67,8 +74,19 @@ export class WFHandler {
     canExecute(act) {
         return act && act.execute;
     }
-    sendMessage(msg) {
+    sendMessage(message) {
+        const msg = Object.assign(Object.assign({}, message), { process: this.wfProcess, activity: this.wfAction, wfSessionId: this.context.container.wfSessionId });
         this.modelService.setModelValue("message", msg);
         this.context.container.wfMessage.emit(msg);
+    }
+    setWorkflowStatus() {
+        this.wfAction = this.currAction;
+        this.wfProcess = this.currProcess.name;
+    }
+    getWorkflowStatus() {
+        return JSON.stringify({
+            process: this.wfProcess,
+            activity: this.wfAction
+        });
     }
 }

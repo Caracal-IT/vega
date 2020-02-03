@@ -7,8 +7,9 @@ export class WFService {
     }
     setProcess(process) {
         this.process = process;
-        if (this.wfChangeHandler)
-            this.wfChangeHandler(this.action, this.process, null);
+    }
+    getProcess() {
+        return this.process;
     }
     addActivity(type, create) {
         const act = ActivityFactory.activities.find(a => a.type === type);

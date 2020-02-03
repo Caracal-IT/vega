@@ -2,24 +2,35 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const core = require('./core-3ce3ee59.js');
+const core = require('./core-05e63365.js');
 
 class AnalyticsService {
-    send(type, event) {
-        const wfElement = event.path.find((i) => i.hasAttribute && i.hasAttribute("wf-element"));
+    sendMessage(event) {
+        this.sendPostMessage(event.detail);
+    }
+    send(type, path) {
+        const wfElement = path.find(i => i.hasAttribute && i.hasAttribute("wf-element"));
         if (!wfElement)
             return;
-        const payload = this.createPayload(type, wfElement, event.path);
+        const payload = this.createPayload(type, wfElement, path);
         if (payload) {
-            console.log("ANALYTICS", payload);
-            window.postMessage({
+            this.sendPostMessage({
                 type: payload.type,
-                page: payload.page,
+                process: payload.process,
+                activity: payload.activity,
                 control: payload.control,
-                value: payload.value,
+                valueHash: payload.valueHash,
                 path: payload.wfPath.map(this.getName)
-            }, "*");
+            });
         }
+    }
+    getPath(event) {
+        return event.composedPath(event);
+    }
+    sendPostMessage(message) {
+        const msg = Object.assign(Object.assign({}, message), { timestamp: Date.now() });
+        console.log("ANALYTICS", msg);
+        window.postMessage(msg, "*");
     }
     getName(item) {
         if (item.id)
@@ -29,19 +40,33 @@ class AnalyticsService {
         return "";
     }
     createPayload(type, wfElement, path) {
-        const p = path.filter((i) => i.nodeName && i.nodeName.indexOf("document-fragment") === -1);
-        const wfPage = p.find((i) => i.localName === "sirius-page");
+        const p = path.filter(i => i.nodeName && i.nodeName.indexOf("document-fragment") === -1);
+        const wfPage = p.find(i => i.localName === "sirius-page");
         if (!wfPage)
             return null;
         const activity = Object.assign({}, wfPage.page);
         const wfPath = p.slice(0, p.indexOf(wfPage) + 1);
         if (!activity.name)
             return null;
-        const page = activity.name;
+        const process = activity.context.wfService.process.name;
+        const act = activity.name;
         const control = wfElement.id;
-        const value = wfElement.value;
-        return { type, page, control, value, wfPath };
+        const valueHash = this.getHashCode(wfElement.value);
+        return { type, process, activity: act, control, valueHash, wfPath };
     }
+    getHashCode(value) {
+        let hash = 0;
+        let chr;
+        if (!value || value.length === 0)
+            return hash;
+        for (let i = 0; i < value.length; i++) {
+            chr = value.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    }
+    ;
 }
 
 const SiriusAnalytics = class {
@@ -49,17 +74,25 @@ const SiriusAnalytics = class {
         core.registerInstance(this, hostRef);
     }
     async analyticsHandler(event) {
-        const wfElement = event.path.find((i) => i.hasAttribute && i.hasAttribute("wf-element"));
+        const path = SiriusAnalytics.analyticsService.getPath(event);
+        if (SiriusAnalytics.lastPath[0] === path[0])
+            return;
+        SiriusAnalytics.lastPath = path;
+        const wfElement = path.find((i) => i.hasAttribute && i.hasAttribute("wf-element"));
         if (!wfElement)
             return;
-        event.path[0].addEventListener("blur", this.onBlur);
-        SiriusAnalytics.analyticsService.send("click", event);
+        path[0].addEventListener("blur", this.onBlur);
+        SiriusAnalytics.analyticsService.send("click", path);
+    }
+    wfMessage(event) {
+        SiriusAnalytics.analyticsService.sendMessage(event);
     }
     onBlur(event) {
+        SiriusAnalytics.analyticsService.send("blur", SiriusAnalytics.lastPath);
         event.target.removeEventListener("blur", this.onBlur);
-        SiriusAnalytics.analyticsService.send("blur", event);
     }
 };
+SiriusAnalytics.lastPath = [null];
 SiriusAnalytics.analyticsService = new AnalyticsService();
 
 const SiriusPage = class {
@@ -70,14 +103,11 @@ const SiriusPage = class {
         this.modelService.setModelValue(event.target["id"], event.target["value"]);
         if (!this.page.isDirty)
             return;
-        try {
-            await this.page.validate(this.page.context);
-        }
-        catch (Ex) { }
+        await this.page.validate(this.page.context);
     }
     renderItem(item) {
         return [
-            core.h(item.tag, Object.assign({ "wf-element": true, data: item, error: item["error"], errorMsg: item["errorMessage"], onInput: this.inputHandler.bind(this) }, item, { context: this.page["context"], value: this.modelService.getComponentModelValue(item), caption: this.modelService.getInterpolatedValue(item["caption"]) })),
+            core.h(item.tag, Object.assign({ "wf-element": true, id: item.id, data: item, error: item["error"], errorMsg: item["errorMessage"], onInput: this.inputHandler.bind(this) }, item, { context: this.page["context"], value: this.modelService.getComponentModelValue(item), caption: this.modelService.getInterpolatedValue(item["caption"]) })),
             item.validators ? core.h("span", null, item["errorMessage"]) : null
         ];
     }
@@ -87,6 +117,14 @@ const SiriusPage = class {
     }
     static get style() { return "input[wf-element][data-error-style=true]{border:1px solid #000}[wf-element]{margin:0 2px}input[wf-element][error=true][data-error-style=true]{border:1px solid var(--error-color,red);background-color:var(--error-bg-color,pink)}span{display:inline-block;color:var(--error-color,red)}"; }
 };
+
+class IPC {
+    constructor(parent, process, next) {
+        this.parent = parent;
+        this.process = process;
+        this.next = next;
+    }
+}
 
 class ValidationError extends Error {
     constructor() {
@@ -156,8 +194,6 @@ class PageActivity {
     constructor() {
         this.type = PageActivity.type;
         this.execute = (context) => {
-            // Clear the cache
-            context.container.page = null;
             this.context = context;
             this.isDirty = false;
             this.components
@@ -166,9 +202,7 @@ class PageActivity {
                 component["error"] = "false";
                 component["errorMessage"] = "";
             });
-            setTimeout(() => {
-                context.container.page = this;
-            }, 0);
+            setTimeout(this.reload.bind(this), 10);
         };
         this.validate = (context) => {
             return new Promise((resolve, reject) => {
@@ -186,6 +220,10 @@ class PageActivity {
     }
     static create(act) {
         return Object.assign(new PageActivity(), act);
+    }
+    reload() {
+        this.context.container.page = null;
+        setTimeout(() => this.context.container.page = this, 15);
     }
 }
 PageActivity.type = "page-activity";
@@ -331,7 +369,7 @@ class RedirectActivity {
     constructor() {
         this.type = RedirectActivity.type;
         this.execute = (context) => {
-            const sessionId = this.UUID();
+            const sessionId = context.container.wfSessionId;
             context.container.dehydrate(sessionId);
             if (this.url.indexOf("?") === -1)
                 document.location.href = `${this.url}?sessionId=${sessionId}`;
@@ -341,12 +379,6 @@ class RedirectActivity {
     }
     static create(act) {
         return Object.assign(new RedirectActivity(), act);
-    }
-    UUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
     }
 }
 RedirectActivity.type = "redirect-activity";
@@ -381,8 +413,9 @@ class WFService {
     }
     setProcess(process) {
         this.process = process;
-        if (this.wfChangeHandler)
-            this.wfChangeHandler(this.action, this.process, null);
+    }
+    getProcess() {
+        return this.process;
     }
     addActivity(type, create) {
         const act = ActivityFactory.activities.find(a => a.type === type);
@@ -402,168 +435,6 @@ class WFService {
     }
 }
 
-var MessageType;
-(function (MessageType) {
-    MessageType["StartLoading"] = "START_LOADING";
-    MessageType["EndLoading"] = "END_LOADING";
-    MessageType["Error"] = "ERROR";
-    MessageType["ValidationError"] = "VALIDATION_ERROR";
-})(MessageType || (MessageType = {}));
-
-class Message {
-    constructor(messageType, description, stack) {
-        this.messageType = messageType;
-        this.description = description;
-        this.stack = stack;
-    }
-}
-
-class Context {
-    constructor(model, modelService, wfService, http, container) {
-        this.model = model;
-        this.modelService = modelService;
-        this.wfService = wfService;
-        this.http = http;
-        this.container = container;
-    }
-}
-
-class WFHandler {
-    constructor(http, wfService, modelService, container) {
-        this.http = http;
-        this.wfService = wfService;
-        this.modelService = modelService;
-        this.container = container;
-        this.hasError = false;
-        this.context = new Context({}, this.modelService, this.wfService, this.http, this.container);
-    }
-    handle() {
-        this.wfService.wfChangeHandler = this.handleWfChange.bind(this);
-        this.modelService.modelChangedHandler = this.handleModelChanged.bind(this);
-    }
-    handleWfChange(action, process, source) {
-        this.hasError = false;
-        this.currProcess = process;
-        this.currAction = action || "start";
-        this.executeActivity(source);
-    }
-    handleModelChanged(model) {
-        this.context.model = model;
-    }
-    executeActivity(source) {
-        if (!this.hasActivities())
-            return;
-        const act = this.currProcess.activities.find((p) => p.name === this.currAction);
-        if (this.canExecute(act)) {
-            this.hasError = false;
-            this.sendMessage(new Message(MessageType.StartLoading, "Loading..."));
-            this.validate(source)
-                .then(() => act.execute(this.context))
-                .then(() => this.actionExecuted())
-                .catch((error) => this.handleError(error));
-        }
-    }
-    async validate(source) {
-        if (this.shouldSkipValidate(source))
-            return true;
-        const act = this.currProcess.activities.find((p) => p.name === this.lastAction);
-        if (act && act.validate)
-            return act.validate(this.context);
-    }
-    shouldSkipValidate(source) {
-        return (source && source.data && source.data.noValidate)
-            || (this.currAction === this.lastAction);
-    }
-    actionExecuted() {
-        this.sendMessage(new Message(MessageType.EndLoading));
-        if (!this.hasError)
-            this.lastAction = this.currAction;
-    }
-    handleError(error) {
-        this.hasError = true;
-        this.modelService.setModelValue("message", new Message(MessageType.EndLoading, error.message));
-        if (error instanceof ValidationError)
-            this.sendMessage(new Message(MessageType.ValidationError, error.message, error.stack));
-        else
-            this.sendMessage(new Message(MessageType.Error, error.message, error.stack));
-    }
-    hasActivities() {
-        return this.currProcess && this.currProcess.activities;
-    }
-    canExecute(act) {
-        return act && act.execute;
-    }
-    sendMessage(msg) {
-        this.modelService.setModelValue("message", msg);
-        this.context.container.wfMessage.emit(msg);
-    }
-}
-
-class ModelService {
-    constructor() {
-        this.model = {};
-        this.onInput = this.inputHandler.bind(this);
-    }
-    setModelValue(name, value) {
-        this.model = this.merge(this.model, name, value);
-        if (this.modelChangedHandler)
-            this.modelChangedHandler(this.model);
-    }
-    getComponentModelValue(component) {
-        const model = this.getModel();
-        let value;
-        if (component && component.id && model)
-            value = this.getModelValue(component.id);
-        if (value === undefined && component.value) {
-            value = component.value;
-            this.setModelValue(component.id, value);
-        }
-        return value;
-    }
-    getModelValue(key) {
-        return this.getValue(key, this.getModel());
-    }
-    getInterpolatedValue(value) {
-        if (!value)
-            return value;
-        const myRegexp = /\{\{(?:\w+)\}\}/g;
-        const match = value.match(myRegexp);
-        if (!match || match.length === 0)
-            return value;
-        return match.reduce((prev, curr) => this.replaceAll(prev, curr), value);
-    }
-    getModel() {
-        return Object.assign({}, this.model);
-    }
-    setModel(model) {
-        this.model = Object.assign({}, model);
-    }
-    getValue(key, model) {
-        return key.split(".").reduce((total, currentElement) => total ? total[currentElement] : undefined, model);
-    }
-    replaceAll(value, key) {
-        const newValue = this.getModelValue(key.substring(2, key.length - 2));
-        return value.replace(key, newValue);
-    }
-    inputHandler(event) {
-        const target = event.currentTarget;
-        const wfElement = target.closest("[wf-element]");
-        this.setModelValue(wfElement.id, wfElement["value"]);
-    }
-    merge(model, name, value) {
-        if (!name)
-            return;
-        let newModel = Object.assign({}, model);
-        name
-            .split(".")
-            .reduce((total, current, index, arr) => {
-            total[current] = index == arr.length - 1 ? value : Object.assign({}, total[current]);
-            return total[current];
-        }, newModel);
-        return newModel;
-    }
-}
-
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb["GET"] = "get";
@@ -572,18 +443,6 @@ var HttpVerb;
     HttpVerb["DELETE"] = "delete";
     HttpVerb["PATCH"] = "patch";
 })(HttpVerb || (HttpVerb = {}));
-
-class WFLoaderHandler {
-    constructor(http) {
-        this.http = http;
-    }
-    load(process) {
-        const url = new Url(`${this.baseUrl}\\${process}`, HttpVerb.GET);
-        url.apiKey = this.apiKey;
-        return this.http
-            .fetchData(url);
-    }
-}
 
 var MappingDirection;
 (function (MappingDirection) {
@@ -635,6 +494,71 @@ class HttpService {
     }
 }
 
+class ModelService {
+    constructor() {
+        this.model = {};
+        this.onInput = this.inputHandler.bind(this);
+    }
+    setModelValue(name, value) {
+        this.model = this.merge(this.model, name, value);
+        if (this.modelChangedHandler)
+            this.modelChangedHandler(this.model);
+    }
+    getComponentModelValue(component) {
+        const model = this.getModel();
+        let value;
+        if (component && component.id && model)
+            value = this.getModelValue(component.id);
+        if (value === undefined && component.value) {
+            value = component.value;
+            this.setModelValue(component.id, value);
+        }
+        return value;
+    }
+    getModelValue(key) {
+        return this.getValue(key, this.getModel());
+    }
+    getInterpolatedValue(value) {
+        if (!value)
+            return value;
+        const myRegexp = /\{\{(?:(\w|\.)+)\}\}/g;
+        const match = value.match(myRegexp);
+        if (!match || match.length === 0)
+            return value;
+        return match.reduce((prev, curr) => this.replaceAll(prev, curr), value);
+    }
+    getModel() {
+        return Object.assign({}, this.model);
+    }
+    setModel(model) {
+        this.model = Object.assign({}, model);
+    }
+    getValue(key, model) {
+        return key.split(".").reduce((total, currentElement) => total ? total[currentElement] : undefined, model);
+    }
+    replaceAll(value, key) {
+        const newValue = this.getModelValue(key.substring(2, key.length - 2));
+        return value.replace(key, newValue);
+    }
+    inputHandler(event) {
+        const target = event.currentTarget;
+        const wfElement = target.closest("[wf-element]");
+        this.setModelValue(wfElement.id, wfElement["value"]);
+    }
+    merge(model, name, value) {
+        if (!name)
+            return;
+        let newModel = Object.assign({}, model);
+        name
+            .split(".")
+            .reduce((total, current, index, arr) => {
+            total[current] = index == arr.length - 1 ? value : Object.assign({}, total[current]);
+            return total[current];
+        }, newModel);
+        return newModel;
+    }
+}
+
 class PersistanceService {
     setItem(key, value) {
         sessionStorage.setItem(key, JSON.stringify(value));
@@ -650,11 +574,145 @@ class PersistanceService {
     }
 }
 
+var MessageType;
+(function (MessageType) {
+    MessageType["StartLoading"] = "START_LOADING";
+    MessageType["EndLoading"] = "END_LOADING";
+    MessageType["Error"] = "ERROR";
+    MessageType["ValidationError"] = "VALIDATION_ERROR";
+    MessageType["Workflow_Changing"] = "WORKFLOW_CHANGING";
+    MessageType["Workflow_Changed"] = "WORKFLOW_CHANGED";
+})(MessageType || (MessageType = {}));
+
+class Message {
+    constructor(messageType, description, stack) {
+        this.messageType = messageType;
+        this.description = description;
+        this.stack = stack;
+    }
+}
+
+class Context {
+    constructor(model, modelService, wfService, http, container) {
+        this.model = model;
+        this.modelService = modelService;
+        this.wfService = wfService;
+        this.http = http;
+        this.container = container;
+    }
+}
+
+class WFHandler {
+    constructor(http, wfService, modelService, container) {
+        this.http = http;
+        this.wfService = wfService;
+        this.modelService = modelService;
+        this.container = container;
+        this.hasError = false;
+        this.context = new Context({}, this.modelService, this.wfService, this.http, this.container);
+    }
+    handle() {
+        this.wfService.wfChangeHandler = this.handleWfChange.bind(this);
+        this.modelService.modelChangedHandler = this.handleModelChanged.bind(this);
+    }
+    handleWfChange(action, process, source) {
+        this.hasError = false;
+        this.currProcess = process;
+        this.currAction = action || "start";
+        setTimeout(() => {
+            this.setWorkflowStatus();
+            this.sendMessage(new Message(MessageType.Workflow_Changing, this.getWorkflowStatus()));
+            this.executeActivity(source);
+        }, 10);
+    }
+    handleModelChanged(model) {
+        this.context.model = model;
+    }
+    executeActivity(source) {
+        if (!this.hasActivities())
+            return;
+        const act = this.currProcess.activities.find((p) => p.name === this.currAction);
+        if (this.canExecute(act)) {
+            this.hasError = false;
+            this.sendMessage(new Message(MessageType.StartLoading, "Loading..."));
+            this.validate(source)
+                .then(() => act.execute(this.context))
+                .then(() => this.actionExecuted())
+                .catch((error) => this.handleError(error));
+        }
+    }
+    async validate(source) {
+        if (this.shouldSkipValidate(source))
+            return true;
+        const act = this.currProcess.activities.find((p) => p.name === this.lastAction);
+        if (act && act.validate)
+            return act.validate(this.context);
+    }
+    shouldSkipValidate(source) {
+        return (source && source.data && source.data.noValidate)
+            || (this.currAction === this.lastAction);
+    }
+    actionExecuted() {
+        this.sendMessage(new Message(MessageType.EndLoading));
+        this.sendMessage(new Message(MessageType.Workflow_Changed, this.getWorkflowStatus()));
+        if (!this.hasError)
+            this.lastAction = this.currAction;
+    }
+    handleError(error) {
+        this.hasError = true;
+        this.sendMessage(new Message(MessageType.EndLoading));
+        this.modelService.setModelValue("message", new Message(MessageType.EndLoading, error.message));
+        if (error instanceof ValidationError)
+            this.sendMessage(new Message(MessageType.ValidationError, error.message, error.stack));
+        else
+            this.sendMessage(new Message(MessageType.Error, error.message, error.stack));
+        this.sendMessage(new Message(MessageType.Workflow_Changed, this.getWorkflowStatus()));
+    }
+    hasActivities() {
+        return this.currProcess && this.currProcess.activities;
+    }
+    canExecute(act) {
+        return act && act.execute;
+    }
+    sendMessage(message) {
+        const msg = Object.assign(Object.assign({}, message), { process: this.wfProcess, activity: this.wfAction, wfSessionId: this.context.container.wfSessionId });
+        this.modelService.setModelValue("message", msg);
+        this.context.container.wfMessage.emit(msg);
+    }
+    setWorkflowStatus() {
+        this.wfAction = this.currAction;
+        this.wfProcess = this.currProcess.name;
+    }
+    getWorkflowStatus() {
+        return JSON.stringify({
+            process: this.wfProcess,
+            activity: this.wfAction
+        });
+    }
+}
+
+class WFLoaderHandler {
+    constructor(http) {
+        this.http = http;
+    }
+    load(process) {
+        const url = new Url(`${this.baseUrl}\\${process}`, HttpVerb.GET);
+        url.apiKey = this.apiKey;
+        return this.http
+            .fetchData(url);
+    }
+}
+
 const SiriusWf = class {
     constructor(hostRef) {
         core.registerInstance(this, hostRef);
         this.ipcHistory = [];
         this.wfMessage = core.createEvent(this, "wfMessage", 7);
+    }
+    validateName(newValue, oldValue) {
+        if (newValue === oldValue || newValue === "")
+            return;
+        this.loadUrl(newValue);
     }
     async addActivity(type, create) {
         this.wfService.addActivity(type, create);
@@ -662,30 +720,26 @@ const SiriusWf = class {
     async goto(activity) {
         this.wfService.setNextAction(activity, this);
     }
-    async loadProcess(process, activity = "start") {
-        this.page = null;
-        this.wfService.setProcess(process);
-        this.goto(activity);
-    }
-    async parse(processDef) {
-        return this.wfService.parse(processDef);
-    }
-    async load(processDef, activity = "start") {
+    async loadProcess(processDef, activity = "start") {
         if (typeof processDef === 'object')
             processDef = JSON.stringify(processDef);
         const process = this.wfService.parse(processDef);
         if (!process)
             return;
-        return this.loadProcess(process, activity);
+        this.page = null;
+        this.wfService.setProcess(process);
+        this.goto(activity);
     }
     async loadUrl(process, activity = "start") {
         try {
-            await this.load(await this.wfLoaderHandler.load(process), activity);
+            await this.loadProcess(await this.wfLoaderHandler.load(process), activity);
             this.process = process;
+            return this.wfService.getProcess();
         }
         catch (Exception) { }
     }
     async hydrate(process, sessionId, activity = "start") {
+        this.wfSessionId = sessionId;
         const ipc = this.persistance.getItem(`${sessionId}_IPC`) || [];
         const model = this.persistance.getItem(`${sessionId}_MODEL`) || this.modelService.getModel();
         this.loadUrl(process, activity);
@@ -720,6 +774,7 @@ const SiriusWf = class {
     }
     async componentWillLoad() {
         this.persistance = new PersistanceService();
+        this.wfSessionId = this.wfSessionId || this.UUID();
         this.wfService = new WFService();
         this.modelService = new ModelService();
         this.http = new HttpService(this.modelService);
@@ -731,17 +786,19 @@ const SiriusWf = class {
         if (this.process)
             this.loadUrl(this.process);
     }
+    UUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
     render() {
         return core.h("sirius-page", { page: this.page, modelService: this.modelService });
     }
+    static get watchers() { return {
+        "process": ["validateName"]
+    }; }
 };
-class IPC {
-    constructor(parent, process, next) {
-        this.parent = parent;
-        this.process = process;
-        this.next = next;
-    }
-}
 
 exports.sirius_analytics = SiriusAnalytics;
 exports.sirius_page = SiriusPage;

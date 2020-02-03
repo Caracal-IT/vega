@@ -10,5 +10,6 @@ export declare class PageActivity implements Activity, Page {
     static create(act: Activity): PageActivity & Activity;
     type: string;
     execute: (context: Context) => void;
+    reload(): void;
     validate: (context: Context) => Promise<boolean>;
 }
