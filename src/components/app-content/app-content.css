@@ -1,0 +1,17 @@
+:host {
+  padding: 5px;
+}
+
+sirius-wf {
+  position:relative;
+  display: block;
+  top:40px;
+  text-align:center;
+  line-height:36px;
+  margin:auto;
+  width:450px;
+  min-height: 100px;
+  border:1px solid black;
+  border-radius:10px;
+  padding:5px;
+}

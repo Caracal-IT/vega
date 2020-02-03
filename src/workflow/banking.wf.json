@@ -1,0 +1,32 @@
+{
+  "name": "Banking",
+  "activities": [
+    {
+      "name": "start",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Banking" },
+        { "tag": "rigel-field", "id": "banking.amount", "caption": "Amount" },
+        { "tag": "rigel-field", "id": "banking.accountHolder", "caption": "Account Holder" },
+        { "tag": "rigel-field", "id": "banking.cardNumber", "caption": "Card Number" },
+        { "tag": "rigel-field", "id": "banking.cvcNumber", "caption": "CVC Number" },
+        { "tag": "rigel-button", "caption": "Deposit", "next": "end"},
+        { "tag": "rigel-button",  "caption": "Go To Fake Bank", "next": "redirectTo" }
+      ]
+    },
+    {
+      "name": "redirectTo",
+      "type": "redirect-activity",
+      "url": "https://caracal-it.github.io/sirius/redirect.html?process=banking.wf.json&activity=end"
+    },
+    {
+      "name": "end",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Deposit Success" },
+        { "tag": "rigel-label", "caption": "You have been successfully deposited {{banking.amount}}" },
+        { "tag": "rigel-button", "caption": "Deposit", "next": "start"}
+      ]
+    }
+  ]
+}

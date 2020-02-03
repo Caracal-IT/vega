@@ -1,0 +1,31 @@
+{
+  "name": "Register",
+  "activities": [
+    {
+      "name": "start",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Register" },
+
+        { "tag": "rigel-field",
+          "id": "register.username",
+          "caption": "Username",
+          "validators": [
+            { "name": "Required", "message": "The field is required" }
+          ]
+        },
+
+        { "tag": "rigel-field", "type":"password", "id": "password", "caption": "Password", "value" : ""},
+        { "tag": "rigel-button", "caption": "Register", "next": "end"}
+      ]
+    },
+    {
+      "name": "end",
+      "type": "page-activity",
+      "components": [
+        { "tag": "rigel-header", "caption": "Register Success" },
+        { "tag": "rigel-label", "caption": "You have been successfully registered" }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,7 @@
+div {
+  height: 100vh;
+}
+
 header {
   background: #5851ff;
   color: white;
@@ -12,4 +16,20 @@ h1 {
   font-weight: 500;
   color: #fff;
   padding: 0 12px;
+}
+
+aside {
+  position: absolute;
+  display: inline-block;
+  width: 200px;
+  height: calc(100% - 56px);
+  border-right: 1px solid #5851ff;
+}
+
+main {
+  position: relative;
+  display: inline-block;
+  left: 200px;
+  width: calc(100% - 220px);
+  padding: 10px;
 }
